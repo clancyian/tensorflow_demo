@@ -11,14 +11,14 @@ batch_size = 100
 display_step = 2
 
 # TF graph input
-x = tf.placeholder("float", [None, 784]) # mnist data image of shape 28*28=784
-y = tf.placeholder("float", [None, 10]) # 0-9 digits recognition => 10 classes
+x = tf.placeholder("float", [None, 784], name="image") # mnist data image of shape 28*28=784
+y = tf.placeholder("float", [None, 10], name="label") # 0-9 digits recognition => 10 classes
 
 # Create a model
 
 # Set model weights
-W = tf.Variable(tf.zeros([784, 10]))
-b = tf.Variable(tf.zeros([10]))
+W = tf.Variable(tf.zeros([784, 10]), name="W")
+b = tf.Variable(tf.zeros([10]), name="b")
 
 with tf.name_scope("Wx_b") as scope:
     # Construct a linear model
@@ -29,17 +29,18 @@ w_h = tf.summary.histogram("weights", W)
 b_h = tf.summary.histogram("biases", b)
 
 # More name scopes will clean up graph representation
-with tf.name_scope("cost_function") as scope:
+with tf.name_scope("loss") as scope:
     # Minimize error using cross entropy
     # Cross entropy
     # http://rdipietro.github.io/friendly-intro-to-cross-entropy-loss/
-    cost_function = -tf.reduce_sum(y*tf.log(model))
+    loss = -tf.reduce_sum(y*tf.log(model))
     # Create a summary to monitor the cost function
-    tf.summary.scalar("cost_function", cost_function)
+    tf.summary.scalar("summary_loss", loss)
 
 with tf.name_scope("train") as scope:
     # Gradient descent
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost_function)
+    # The minimize method computes and applies the gradients
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
 
 # Initializing the variables
 init = tf.global_variables_initializer()
@@ -64,7 +65,7 @@ with tf.Session() as sess:
             # Fit training using batch data
             sess.run(optimizer, feed_dict={x: batch_xs, y: batch_ys})
             # Compute the average loss
-            avg_cost += sess.run(cost_function, feed_dict={x: batch_xs, y: batch_ys})/total_batch
+            avg_cost += sess.run(loss, feed_dict={x: batch_xs, y: batch_ys})/total_batch
             # Write logs for each iteration
             summary_str = sess.run(merged_summary_op, feed_dict={x: batch_xs, y: batch_ys})
             summary_writer.add_summary(summary_str, iteration*total_batch + i)
