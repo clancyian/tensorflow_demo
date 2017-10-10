@@ -3,12 +3,13 @@ import input_data
 mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
 
 import tensorflow as tf
+from tensorflow.python import debug as tf_debug
 
 # Set parameters
 learning_rate = 0.01
-training_iteration = 30
+training_iteration = 10
 batch_size = 100
-display_step = 2
+display_step = 5
 
 # TF graph input
 x = tf.placeholder("float", [None, 784], name="image") # mnist data image of shape 28*28=784
@@ -50,6 +51,7 @@ merged_summary_op = tf.summary.merge_all()
 
 # Launch the graph
 with tf.Session() as sess:
+    sess = tf_debug.LocalCLIDebugWrapperSession(sess)
     # Q why is b not initialised?
     sess.run(init)
 
@@ -63,15 +65,17 @@ with tf.Session() as sess:
         for i in range(total_batch):
             batch_xs, batch_ys = mnist.train.next_batch(batch_size)
             # Fit training using batch data
+            # Passing an operation here so no return value
             sess.run(optimizer, feed_dict={x: batch_xs, y: batch_ys})
             # Compute the average loss
+            # Passing a tensor so returning an ndarray
             avg_cost += sess.run(loss, feed_dict={x: batch_xs, y: batch_ys})/total_batch
             # Write logs for each iteration
             summary_str = sess.run(merged_summary_op, feed_dict={x: batch_xs, y: batch_ys})
             summary_writer.add_summary(summary_str, iteration*total_batch + i)
         # Display logs per iteration step
         if iteration % display_step == 0:
-            print ("Iteration:", '%04d' % (iteration + 1), "cost=", "{:.9f}".format(avg_cost))
+            print ("Iteration:", '%04d' % (iteration + 1), "Average cost=", "{:.9f}".format(avg_cost))
 
     print ("Tuning completed!")
 
