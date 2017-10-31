@@ -1,3 +1,7 @@
 graph/
+weights/
 __pycache__/
 tags
+*.swn
+*.swo
+*.swp
